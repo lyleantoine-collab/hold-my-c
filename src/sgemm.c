@@ -27,10 +27,10 @@ void sgemm_simd(int m, int n, int k, float alpha, const float *A, const float *B
                         int j = bj;
 
                         for (; j <= jmax - 8; j += 8) {
-                            __m256 v_b = _mm256_load_ps(&B[p * n + j]);
-                            __m256 v_c = _mm256_load_ps(&C[i * n + j]);
+                            __m256 v_b = _mm256_loadu_ps(&B[p * n + j]);
+                            __m256 v_c = _mm256_loadu_ps(&C[i * n + j]);
                             v_c = _mm256_fmadd_ps(v_alpha, v_b, v_c);
-                            _mm256_store_ps(&C[i * n + j], v_c);
+                            _mm256_storeu_ps(&C[i * n + j], v_c);
                         }
 
                         for (; j < jmax; j++) {
