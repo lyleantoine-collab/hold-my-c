@@ -5,7 +5,7 @@
 #define BLOCK_SIZE 64
 
 void ssyr2k_simd(int n, int k, float alpha, const float *A, const float *B, float beta, float *C) {
-    #pragma omp parallel for collapse(2) schedule(static)
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; i++) {
         for (int j = 0; j <= i; j++) {
             C[i * n + j] *= beta;
