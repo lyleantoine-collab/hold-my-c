@@ -5,16 +5,14 @@
 #define BLOCK_SIZE 64
 
 void ssyrk_simd(int n, int k, float alpha, const float *A, float beta, float *C) {
-    // Scale existing matrix C by beta
-    #pragma omp parallel for collapse(2) schedule(static)
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < n; i++) {
         for (int j = 0; j <= i; j++) {
             C[i * n + j] *= beta;
         }
     }
 
-    // Blocked symmetric rank-k update (C = alpha * A * A^T + beta * C)
-    #pragma omp parallel for collapse(2) schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int bi = 0; bi < n; bi += BLOCK_SIZE) {
         for (int bj = 0; bj <= bi; bj += BLOCK_SIZE) {
             for (int bk = 0; bk < k; bk += BLOCK_SIZE) {
