@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <immintrin.h>
+#include <omp.h>
 #include "../src/axpby.h"
 
 void axpby_simd(int n, float alpha, const float *x, float beta, float *y);
@@ -12,7 +14,6 @@ int main() {
     float alpha = 2.0f;
     float beta = 0.5f;
 
-    // Allocate 32-byte aligned memory for AVX2 vector registers
     size_t bytes = N * sizeof(float);
     float *x = (float *)aligned_alloc(32, bytes);
     float *y = (float *)aligned_alloc(32, bytes);
@@ -22,21 +23,21 @@ int main() {
         return 1;
     }
 
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < N; i++) {
         x[i] = 1.0f;
         y[i] = 2.0f;
     }
 
-    clock_t start = clock();
+    // Use wall-clock time for accurate multi-threaded measurement
+    double start = omp_get_wtime();
     for (int it = 0; it < ITERATIONS; it++) {
         axpby_simd(N, alpha, x, beta, y);
     }
-    // Ensure streaming stores are flushed
-    _mm_sfence();
-    clock_t end = clock();
+    double end = omp_get_wtime();
 
-    double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-    printf("Executed %d iterations of Aligned Streaming SIMD AXPBY on %d elements in %.4f seconds.\n", ITERATIONS, N, elapsed);
+    double elapsed = end - start;
+    printf("Executed %d iterations of OpenMP Aligned SIMD AXPBY on %d elements in %.4f seconds.\n", ITERATIONS, N, elapsed);
 
     free(x);
     free(y);
