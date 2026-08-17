@@ -3,7 +3,6 @@
 #include <time.h>
 #include "../src/axpby.h"
 
-// Declare the SIMD variant
 void axpby_simd(int n, float alpha, const float *x, float beta, float *y);
 
 #define N 10000000
@@ -13,11 +12,13 @@ int main() {
     float alpha = 2.0f;
     float beta = 0.5f;
 
-    float *x = (float *)malloc(N * sizeof(float));
-    float *y = (float *)malloc(N * sizeof(float));
+    // Allocate 32-byte aligned memory for AVX2 vector registers
+    size_t bytes = N * sizeof(float);
+    float *x = (float *)aligned_alloc(32, bytes);
+    float *y = (float *)aligned_alloc(32, bytes);
 
     if (!x || !y) {
-        fprintf(stderr, "Allocation failed\n");
+        fprintf(stderr, "Aligned allocation failed\n");
         return 1;
     }
 
@@ -30,10 +31,12 @@ int main() {
     for (int it = 0; it < ITERATIONS; it++) {
         axpby_simd(N, alpha, x, beta, y);
     }
+    // Ensure streaming stores are flushed
+    _mm_sfence();
     clock_t end = clock();
 
     double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-    printf("Executed %d iterations of AVX2 SIMD AXPBY on %d elements in %.4f seconds.\n", ITERATIONS, N, elapsed);
+    printf("Executed %d iterations of Aligned Streaming SIMD AXPBY on %d elements in %.4f seconds.\n", ITERATIONS, N, elapsed);
 
     free(x);
     free(y);
